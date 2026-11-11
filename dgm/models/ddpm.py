@@ -22,7 +22,7 @@ class DDPM(GenerativeModel):
         self.register_buffer("betas", betas)
         self.register_buffer("alphas", alphas)
         self.register_buffer("alpha_bar", alpha_bar)
-        
+
         print(self.data_shape)
         if len(data_shape) > 1:
             self.net = UNet(
@@ -37,18 +37,29 @@ class DDPM(GenerativeModel):
         self.batch_size = 128
 
     def loss(self, x):
-        alpha_bar = self.alpha_bar
-        data_shape = self.data_shape
-        batch_size = self.batch_size
-        t = torch.randint(0, 1000, (x.shape[0],))
+        batch_size = x.shape[0]
 
-        alpha_bar_t = alpha_bar[t].reshape(-1, 1, 1, 1)
+        t = torch.randint(
+            0,
+            len(self.betas),
+            (batch_size,),
+            device=x.device
+        )
+
+        alpha_bar_t = self.alpha_bar[t].view(
+            batch_size, *([1] * (x.ndim - 1))
+        )
+
         epsilon = torch.randn_like(x)
-        x_t = torch.sqrt(alpha_bar_t)*x + torch.sqrt(1 - alpha_bar_t)*epsilon
-        eps_pred = self.mlp(x_t, t)
 
-        criterion = nn.MSELoss()
-        loss = criterion(eps_pred, epsilon)
+        x_t = (
+            torch.sqrt(alpha_bar_t) * x
+            + torch.sqrt(1 - alpha_bar_t) * epsilon
+        )
+
+        eps_pred = self.net(x_t, t)
+
+        loss = torch.nn.functional.mse_loss(eps_pred, epsilon)
 
         return loss, {"some_metric": 0.0}
 
