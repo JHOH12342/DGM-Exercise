@@ -92,7 +92,7 @@ class DDPM(GenerativeModel):
             beta_t = betas[t]
 
             # Predict noise
-            eps_pred = self.mlp(x_t, t_batch)
+            eps_pred = self.net(x_t, t_batch)
 
             # Reverse diffusion mean
             mean = (
