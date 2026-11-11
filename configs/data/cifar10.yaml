@@ -1,0 +1,7 @@
+name: cifar10
+root: ${oc.env:DGM_DATA_ROOT,./data}
+download: true
+hflip: true
+classes: null  # e.g. [0] for a single class
+num_workers: 4
+seed: 0

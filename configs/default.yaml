@@ -1,0 +1,49 @@
+defaults:
+  data: gmm25
+  model: gaussian
+
+seed: 0
+device: auto  # auto | cpu | cuda | cuda:N
+run_name: null
+out_root: outputs
+
+train:
+  steps: 20000
+  batch_size: 512
+  log_every: 100
+  eval_every: 2000  # 0 = only at the end
+  ckpt_every: 5000  # 0 = only at the end
+  keep_ckpts: 3  # 0 = keep all
+  resume: null
+  num_workers: 4
+  ema:
+    enabled: true
+    decay: 0.999
+    start_step: 0
+
+eval:
+  n_samples: 5000
+  sample_batch_size: 5000
+  use_ema: true
+  metrics2d: [mmd, swd, energy, w2, mode_coverage, data_logp, model_nll]
+  fid:
+    enabled: true
+    n_ref: 10000
+    feature: 2048  # 64 | 192 | 768 | 2048
+    inception_score: true
+
+viz:
+  enabled: true
+  n_trajectories: 64
+  trajectory_max: 2000
+  gif: final  # false | true | final
+  vector_field: true
+  vector_field_times: [0.0, 0.25, 0.5, 0.75, 1.0]
+
+logging:
+  tensorboard: true
+  wandb:
+    enabled: false
+    project: dgm
+    entity: null
+    mode: online

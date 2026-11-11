@@ -1,0 +1,18 @@
+defaults:
+  data: cifar10
+  model: gaussian
+data:
+  classes: [0]
+train:
+  steps: 500
+  batch_size: 64
+  log_every: 50
+  eval_every: 250
+  ckpt_every: 0
+  num_workers: 2
+eval:
+  n_samples: 1000
+  sample_batch_size: 250
+  fid: {enabled: true, n_ref: 1000, feature: 64, inception_score: false}
+viz:
+  trajectory_max: 16

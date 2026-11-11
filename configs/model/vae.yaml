@@ -1,0 +1,9 @@
+name: vae
+latent_dim: 2
+beta: 1.0
+recon: gaussian  # gaussian | mse | bernoulli
+lr: 1.0e-3
+clip_grad: null
+net:
+  mlp:  {hidden: 256, n_layers: 3}
+  conv: {ch: 64}

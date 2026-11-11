@@ -1,0 +1,6 @@
+name: gmm
+grid_size: 3
+spacing: 2.0
+std: 0.1
+n_train: null
+seed: 0

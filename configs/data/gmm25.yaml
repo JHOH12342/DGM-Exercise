@@ -1,0 +1,6 @@
+name: gmm
+grid_size: 5
+spacing: 2.0
+std: 0.05
+n_train: null  # null = fresh samples every step
+seed: 0

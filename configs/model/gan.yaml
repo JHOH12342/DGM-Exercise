@@ -1,0 +1,12 @@
+name: gan
+latent_dim: 2
+loss: ns  # ns | wgan-gp | hinge
+n_critic: 1
+gp_weight: 10.0
+r1_gamma: 0.0
+lr_g: 2.0e-4
+lr_d: 2.0e-4
+betas: [0.5, 0.999]
+net:
+  mlp:  {hidden: 256, n_layers: 3, act: lrelu}
+  conv: {ch: 64}

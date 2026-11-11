@@ -1,0 +1,11 @@
+name: ncsn
+sigma_min: 0.01
+sigma_max: 1.0
+n_sigmas: 10
+n_steps_each: 100
+step_lr: 2.0e-5
+lr: 1.0e-3
+clip_grad: 1.0
+net:
+  mlp:  {hidden: 256, n_layers: 4, time_dim: 128}
+  unet: {ch: 64, ch_mult: [1, 2, 2, 2], num_res_blocks: 2, attn_resolutions: [16], dropout: 0.1}

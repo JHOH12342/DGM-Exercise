@@ -1,0 +1,5 @@
+name: spiral
+noise: 0.1
+n_turns: 1.5
+n_train: null
+seed: 0

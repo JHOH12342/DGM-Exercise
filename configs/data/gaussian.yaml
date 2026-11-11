@@ -1,0 +1,5 @@
+name: gaussian
+std: [1.0, 0.3]
+rotation_deg: 30.0
+n_train: null
+seed: 0

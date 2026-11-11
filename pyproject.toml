@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dgm"
+version = "0.1.0"
+description = "Deep generative model playground: 2-D toys and CIFAR-10 x VAE/GAN/NCSN/DDPM/Flow"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "torch>=2.5",
+    "torchvision>=0.20",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
+    "matplotlib>=3.8",
+    "pillow>=10",
+    "omegaconf>=2.3",
+    "tqdm>=4.66",
+    "tensorboard>=2.16",
+    "pyarrow>=15",
+]
+
+[project.optional-dependencies]
+image = ["torchmetrics>=1.4", "torch-fidelity>=0.3.0"]
+wandb = ["wandb>=0.17"]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[tool.setuptools.packages.find]
+include = ["dgm*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501", "UP035", "B905", "B028"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"dgm/viz/_mpl.py" = ["E402"]
+"scripts/*" = ["E402"]
+"tests/*" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
