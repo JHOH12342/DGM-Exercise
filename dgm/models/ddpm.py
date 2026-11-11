@@ -37,8 +37,8 @@ class DDPM(GenerativeModel):
         batch_size = self.batch_size
         t = torch.randint(0, 1000, (x.shape[0],))
 
-        alpha_bar_t = alpha_bar[t].reshape(-1, 1)
-        epsilon = torch.randn(x.shape)
+        alpha_bar_t = alpha_bar[t].reshape(-1, 1, 1, 1)
+        epsilon = torch.randn_like(x)
         x_t = torch.sqrt(alpha_bar_t)*x + torch.sqrt(1 - alpha_bar_t)*epsilon
         eps_pred = self.mlp(x_t, t)
 
