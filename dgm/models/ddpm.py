@@ -65,31 +65,55 @@ class DDPM(GenerativeModel):
 
     @torch.no_grad()
     def sample(self, n, return_trajectory=False):
-        data_shape = self.data_shape
+        device = next(self.parameters()).device
+
         alpha_bar = self.alpha_bar
         alpha = self.alphas
         betas = self.betas
-        x_T = torch.randn(n, *data_shape)
 
-        trajectory = torch.zeros(1001, n, *data_shape)
-        trajectory[0] = x_T
+        # Initial Gaussian noise
+        x_t = torch.randn(n, *self.data_shape, device=device)
 
-        for t in range(1000, 0, -1):
-
-            eps = torch.zeros(n, *data_shape)
-            if t > 1:
-                eps = torch.randn(n, *data_shape)
-
-            alpha_bar_t = alpha_bar[t-1]
-            alpha_t = alpha[t-1]
-            beta_t = betas[t-1]
-            x_t = trajectory[1000-t]
-
-            eps_pred = self.mlp(x_t, torch.tensor(t-1))
-            x_t_1 = (x_t - (1-alpha_t) / (torch.sqrt(1-alpha_bar_t)) * eps_pred) / torch.sqrt(alpha_t) + torch.sqrt(beta_t)*eps
-            
-            trajectory[1001-t] = x_t_1
         if return_trajectory:
-            return trajectory[-1], trajectory
-        else:
-            return trajectory[-1]
+            trajectory = [x_t.detach().cpu().clone()]
+
+        for t in range(999, -1, -1):
+
+            # Time indices: (batch_size,)
+            t_batch = torch.full(
+                (n,),
+                t,
+                device=device,
+                dtype=torch.long
+            )
+
+            alpha_bar_t = alpha_bar[t]
+            alpha_t = alpha[t]
+            beta_t = betas[t]
+
+            # Predict noise
+            eps_pred = self.mlp(x_t, t_batch)
+
+            # Reverse diffusion mean
+            mean = (
+                x_t
+                - (1 - alpha_t)
+                / torch.sqrt(1 - alpha_bar_t)
+                * eps_pred
+            ) / torch.sqrt(alpha_t)
+
+            # Stochastic noise
+            if t > 0:
+                z = torch.randn_like(x_t)
+                x_t = mean + torch.sqrt(beta_t) * z
+            else:
+                x_t = mean
+
+            if return_trajectory:
+                trajectory.append(x_t.detach().cpu().clone())
+
+        if return_trajectory:
+            trajectory = torch.stack(trajectory, dim=0)
+            return x_t, trajectory
+
+        return x_t
