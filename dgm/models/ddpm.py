@@ -15,9 +15,14 @@ class DDPM(GenerativeModel):
     def __init__(self, data_shape, cfg=None):
         super().__init__(data_shape, cfg)
         self.data_shape = tuple(int(s) for s in data_shape)
-        self.betas = torch.linspace(1e-4, 0.02, 1000)
-        self.alphas = 1- self.betas
-        self.alpha_bar = torch.cumprod(self.alphas, dim=0)
+        betas = torch.linspace(1e-4, 0.02, 1000)
+        alphas = 1- self.betas
+        alpha_bar = torch.cumprod(self.alphas, dim=0)
+
+        self.register_buffer("betas", betas)
+        self.register_buffer("alphas", alphas)
+        self.register_buffer("alpha_bar", alpha_bar)
+        
         print(self.data_shape)
         if len(data_shape) > 1:
             self.net = UNet(
