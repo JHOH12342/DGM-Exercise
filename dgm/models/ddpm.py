@@ -24,13 +24,20 @@ class DDPM(GenerativeModel):
         self.register_buffer("alpha_bar", alpha_bar)
 
         print(self.data_shape)
-        if len(data_shape) > 1:
+        print(len(data_shape))
+        if len(self.data_shape) == 3:
             self.net = UNet(
                 in_ch=self.data_shape[0],
                 out_ch=self.data_shape[0],
-                resolution=self.data_shape[1]
+                ch=128,
+                ch_mult=(1, 2, 2, 2),
+                num_res_blocks=2,
+                attn_resolutions=(16,),
+                dropout=0.1,
+                resolution=self.data_shape[1],
+                time_scale=1.0
             )
-        self.mlp = TimeConditionedMLP(
+        self.net = TimeConditionedMLP(
             in_shape=self.data_shape,
             out_shape=self.data_shape
         )
