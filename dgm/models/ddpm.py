@@ -24,7 +24,6 @@ class DDPM(GenerativeModel):
         self.register_buffer("alpha_bar", alpha_bar)
 
         print(self.data_shape)
-        print(len(data_shape))
         if len(self.data_shape) == 3:
             self.net = UNet(
                 in_ch=self.data_shape[0],
@@ -37,10 +36,11 @@ class DDPM(GenerativeModel):
                 resolution=self.data_shape[1],
                 time_scale=1.0
             )
-        self.net = TimeConditionedMLP(
-            in_shape=self.data_shape,
-            out_shape=self.data_shape
-        )
+        else:
+            self.net = TimeConditionedMLP(
+                in_shape=self.data_shape,
+                out_shape=self.data_shape
+            )
         self.batch_size = 128
 
     def loss(self, x):
@@ -72,55 +72,65 @@ class DDPM(GenerativeModel):
 
     @torch.no_grad()
     def sample(self, n, return_trajectory=False):
-        device = next(self.parameters()).device
+        device = self.betas.device
+        T = len(self.betas)
 
         alpha_bar = self.alpha_bar
-        alpha = self.alphas
+        alphas = self.alphas
         betas = self.betas
 
-        # Initial Gaussian noise
-        x_t = torch.randn(n, *self.data_shape, device=device)
+        was_training = self.training
+        self.eval()
 
-        if return_trajectory:
-            trajectory = [x_t.detach().cpu().clone()]
-
-        for t in range(999, -1, -1):
-
-            # Time indices: (batch_size,)
-            t_batch = torch.full(
-                (n,),
-                t,
-                device=device,
-                dtype=torch.long
+        try:
+            x_t = torch.randn(
+                n, *self.data_shape,
+                device=device
             )
 
-            alpha_bar_t = alpha_bar[t]
-            alpha_t = alpha[t]
-            beta_t = betas[t]
+            if return_trajectory:
+                trajectory = [x_t.cpu().clone()]
 
-            # Predict noise
-            eps_pred = self.net(x_t, t_batch)
+            for t in range(T - 1, -1, -1):
+                # Batch-wise timestep
+                t_batch = torch.full(
+                    (n,),
+                    t,
+                    device=device,
+                    dtype=torch.long
+                )
 
-            # Reverse diffusion mean
-            mean = (
-                x_t
-                - (1 - alpha_t)
-                / torch.sqrt(1 - alpha_bar_t)
-                * eps_pred
-            ) / torch.sqrt(alpha_t)
+                alpha_bar_t = alpha_bar[t]
+                alpha_t = alphas[t]
+                beta_t = betas[t]
 
-            # Stochastic noise
-            if t > 0:
-                z = torch.randn_like(x_t)
-                x_t = mean + torch.sqrt(beta_t) * z
-            else:
-                x_t = mean
+                # Predict noise
+                eps_pred = self.net(x_t, t_batch)
+
+                # Reverse process mean
+                mean = (
+                    x_t
+                    - beta_t
+                    / torch.sqrt(1 - alpha_bar_t)
+                    * eps_pred
+                ) / torch.sqrt(alpha_t)
+
+                # Reverse diffusion
+                if t > 0:
+                    eps = torch.randn_like(x_t)
+                    x_t = mean + torch.sqrt(beta_t) * eps
+                else:
+                    x_t = mean
+
+                if return_trajectory:
+                    trajectory.append(x_t.cpu().clone())
 
             if return_trajectory:
-                trajectory.append(x_t.detach().cpu().clone())
+                return x_t, torch.stack(trajectory, dim=0)
 
-        if return_trajectory:
-            trajectory = torch.stack(trajectory, dim=0)
-            return x_t, trajectory
+            return x_t
 
-        return x_t
+        finally:
+            if was_training:
+                self.train()
+
